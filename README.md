@@ -1,9 +1,16 @@
 # gtmstack
 
-Claude command pack for go-to-market specialists. Three canonical GTM
-books (Crossing the Chasm, Obviously Awesome, Predictable Revenue)
-encoded as runnable evals applied to real GTM situations. Multi-book
-synthesis is the value layer single-book analysis cannot produce.
+**Five canonical GTM books — Crossing the Chasm, Obviously Awesome,
+Predictable Revenue, Play Bigger, The Mom Test — encoded as runnable
+evals.** You bring a real GTM situation; each book produces a structured
+analysis; a multi-book synthesis surfaces what the frameworks converge on
+(high-confidence calls) and where they diverge (the strategic questions
+you still have to answer). ~25 minutes from first prompt to deliverable.
+Free. No API key required.
+
+[See a sample synthesis](#see-a-sample-synthesis-30-seconds) ·
+[Walkthrough](#walkthrough-what-it-feels-like-to-use) ·
+[Install](#install-one-time)
 
 > Inspired by [gstack](https://github.com/garrytan/gstack) — Garry Tan's
 > Claude command pack for builders. gtmstack is the same shape, for GTM
@@ -24,8 +31,25 @@ the rubric and produces a weighted score against a 0.75 pass threshold.
 
 When you run multiple books on the same case, the synthesis is where the
 value compounds: convergent diagnoses across frameworks are the highest-
-confidence signal in the analysis. When three independent lenses agree on
+confidence signal in the analysis. When five independent lenses agree on
 a buyer, that buyer is real.
+
+## See a sample synthesis (30 seconds)
+
+The repo ships with worked-example synthesis deliverables. Open any of
+them in your browser to see what gtmstack actually produces — before you
+install anything:
+
+- **[cursor-2026](evals/deliverables/cursor-2026-multi-book-synthesis.md)** —
+  Cursor (AI code editor, 2026), contested chasm position, public-info inputs.
+- **[anthropic-brazil-2026](evals/deliverables/anthropic-brazil-2026-multi-book-synthesis.md)** —
+  public-info simulation of Anthropic's LATAM expansion, all five books.
+- **[gtmstack-2026](evals/deliverables/gtmstack-2026-multi-book-synthesis.md)** —
+  gtmstack diagnosing its own GTM (the rare case where the tool itself is
+  the case). All five books converge on one prescription.
+
+If a synthesis looks useful, the install path below makes it runnable on
+your own GTM situation in under two minutes.
 
 ## Quickstart
 
@@ -339,6 +363,13 @@ above, finds the gtmstack CLI on your PATH, and writes outputs to
 - **predictable-revenue** (Aaron Ross) — ICP, role specialization
   (SDR/AE/AM), Seeds/Nets/Spears, Cold Calling 2.0, when NOT to apply
   outbound. *How to sell.*
+- **play-bigger** (Lochhead / Peterson / Ramadan) — category design,
+  Magic Triangle (product/company/category alignment), POV, lightning
+  strike, king-vs-niche economics. *What category to play in.*
+- **the-mom-test** (Rob Fitzpatrick) — bad-data signals (compliments,
+  fluff, ideas-from-prospects, vanity engagement), past-behavior probes,
+  falsifying questions, commitment ladder, bad-mouth test. *Whether
+  you've actually validated demand or just the founder's hopes.*
 
 ## Cases
 
@@ -348,9 +379,11 @@ The current case library:
 |------|-----------------|------|
 | slack-2014 | crossing-the-chasm | with ground truth |
 | zoom-2018 | crossing-the-chasm | with ground truth |
+| notion-2020 | all five | blind historical |
 | cursor-2026 | crossing-the-chasm, obviously-awesome | blind |
 | stripe-2011 | crossing-the-chasm, predictable-revenue | blind (productive misfit for PR) |
-| anthropic-brazil-2026 | all three | blind simulation |
+| anthropic-brazil-2026 | all five | blind simulation |
+| gtmstack-2026 | all five | self-diagnostic |
 
 ## Why books-as-evals
 
