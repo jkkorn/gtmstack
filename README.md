@@ -231,6 +231,96 @@ maintainer.
 - **One-shot magic.** The first run is the starting point. Re-run with
   better inputs as you learn. The diagnostic compounds.
 
+## Where gtmstack fits in the competitive landscape
+
+GTM specialists already have ways to think strategically about their
+go-to-market plan. gtmstack is one option among several. The honest
+positioning, named in the four layers most likely to be on your shortlist:
+
+**Layer 1 — Tactical AI tools** (Lavender, Outreach, Default.com, Apollo,
+Clay). These automate execution: cold-email copy, sequence orchestration,
+prospect data, pipeline operations. They presume the strategy is decided.
+gtmstack is upstream — it tells you whether the strategy is right; tactical
+tools execute the strategy you've already chosen. Different jobs.
+
+**Layer 2 — Generic AI assistants** (ChatGPT, Claude.ai, Gemini, custom GPTs).
+A capable AI assistant can answer any GTM question, including questions
+about Moore's chasm or Dunford's positioning. The structural difference is
+that generic assistants give answers; gtmstack runs encoded frameworks as
+rubrics that score whether the analysis applies the framework correctly.
+Generic AI is conversation; gtmstack is structured diagnostic with
+auditable framework citations.
+
+**Layer 3 — Strategy consulting** (BCG, Bain, McKinsey, Winning by Design,
+fractional CMOs, Pavilion / OnDeck advisors). Consulting offers depth, brand
+credibility, and partner-mediated implementation support. It also costs
+$20K-$50K+ and takes 3 weeks. gtmstack is faster, cheaper, and zero-cost
+incrementally — but ships with no consultant relationship, no implementation
+support, and no analyst category recognition. Consulting is a relationship;
+gtmstack is a tool.
+
+**Layer 4 — AI-strategic-thinking peers** (uncertain — possibly empty).
+Other open-source or AI-native tools that encode prescriptive frameworks
+as runnable diagnostics for GTM specifically. As of Q2 2026, this slot
+appears empty. If you find a competitor here, gtmstack would benefit from
+the comparison — please open a GitHub issue.
+
+### Five things gtmstack does well
+
+1. **Multi-book convergence is the value layer.** When 4-5 independent
+   frameworks reach the same beachhead through different reasoning paths,
+   the beachhead is more reliable than any single framework's solo opinion.
+   Single-book = one perspective. Multi-book = differential diagnosis. No
+   alternative on the shortlist produces this.
+2. **Auditable framework citations.** Every prescription in the synthesis
+   names which book(s) prescribed it, with rubric scores. Consulting decks
+   are takes; gtmstack is structured argument with the framework lineage
+   exposed.
+3. **Speed and cost.** ~25 minutes from first prompt to deliverable. $0
+   incremental cost (you already pay for Claude Code). Compare to ~3 weeks
+   and $20K-$50K of strategy consulting.
+4. **Honest divergence.** When the books disagree, the synthesis surfaces
+   the disagreement as the actual strategic question rather than papering
+   over it with a confident take. Generic AI optimizes for one coherent
+   answer; gtmstack optimizes for surfacing what you don't yet know.
+5. **Books-as-evals as a reusable shape.** The pattern (framework.md /
+   prompt.md / rubric.json / cases/) generalizes beyond GTM — legal
+   contracts, product strategy, investor memos, design systems. gtmstack
+   is one instance of a pattern that may be more interesting than the
+   instance.
+
+### Five things gtmstack is honestly bad at
+
+1. **Brand, customer references, analyst recognition.** Zero of all three.
+   Consulting decks come with the consultant's reputation; gtmstack comes
+   with a GitHub repo authored by one part-time engineer. If your buyer
+   needs procurement-grade vendor credibility, this is the largest gap.
+2. **Implementation support.** Consulting engagements include partner-led
+   rollout, change management, and follow-up. gtmstack hands you a
+   synthesis and walks away. Diagnostic ≠ doing.
+3. **Tactical execution layer.** Lavender sends emails. Outreach orchestrates
+   sequences. Apollo enriches prospects. gtmstack does none of this. If
+   your bottleneck is execution, gtmstack is the wrong tool.
+4. **Conversational range.** ChatGPT can answer any GTM question, including
+   questions outside the books gtmstack has encoded. gtmstack only runs the
+   five books it ships with — Crossing the Chasm, Obviously Awesome,
+   Predictable Revenue, Play Bigger, The Mom Test. Outside that surface,
+   reach for generic AI.
+5. **Validated demand.** As of v0.2, no external GTM operator has
+   independently validated that the synthesis prescribes moves they would
+   actually take. The cursor-2026 and anthropic-brazil-2026 deliverables
+   are author-authored on public-info inputs. The honest signal is that
+   running gtmstack on a live problem is the only way to find out if it
+   works for you. (See `evals/deliverables/gtmstack-2026-multi-book-synthesis.md`
+   for gtmstack diagnosing its own GTM, including this gap as the
+   load-bearing finding.)
+
+The honest summary: gtmstack is the right tool for a GTM specialist who
+already uses Claude Code, has read at least one of the canonical books,
+and has an active strategic decision to make on a tight clock. It is the
+wrong tool for a buyer who needs vendor credibility, implementation
+support, or tactical execution.
+
 ## The /gtm-office-hours skill (alternative invocation)
 
 If you've installed the skill at `~/.claude/skills/gtm-office-hours`,
