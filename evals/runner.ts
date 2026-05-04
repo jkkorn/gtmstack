@@ -12,6 +12,7 @@
 import {
   readFileSync,
   writeFileSync,
+  appendFileSync,
   mkdirSync,
   existsSync,
   readdirSync,
@@ -19,13 +20,48 @@ import {
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { spawn } from "node:child_process";
+import { homedir } from "node:os";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const VERSION = "0.1.0";
+const VERSION = "0.2.0";
 
 const BOOKS_DIR = join(__dirname, "books");
 const RUNS_DIR = join(__dirname, "runs");
 const DELIVERABLES_DIR = join(__dirname, "deliverables");
+
+// ---------- Telemetry (local-only events log) ----------
+// Persists structured events to ~/.gtmstack/events.jsonl so the user can
+// introspect their gtmstack usage (run counts, completion rates, durations).
+// No remote transmission. Opt-out via GTMSTACK_TELEMETRY=off env var.
+const TELEMETRY_DIR = join(homedir(), ".gtmstack");
+const EVENTS_FILE = join(TELEMETRY_DIR, "events.jsonl");
+
+interface TelemetryEvent {
+  event: string;
+  timestamp: string;
+  version: string;
+  book?: string;
+  case_id?: string;
+  outcome?: "pass" | "fail";
+  duration_ms?: number;
+  cross_judge?: boolean;
+  error?: string;
+}
+
+function logEvent(e: Omit<TelemetryEvent, "timestamp" | "version">): void {
+  if (process.env.GTMSTACK_TELEMETRY === "off") return;
+  try {
+    if (!existsSync(TELEMETRY_DIR)) mkdirSync(TELEMETRY_DIR, { recursive: true });
+    const event: TelemetryEvent = {
+      ...e,
+      timestamp: new Date().toISOString(),
+      version: VERSION,
+    };
+    appendFileSync(EVENTS_FILE, JSON.stringify(event) + "\n");
+  } catch {
+    // Telemetry failures must never break the runner. Silent ignore.
+  }
+}
 
 // ---------- Types ----------
 
@@ -398,6 +434,7 @@ async function cmdRun(
   opts: { quiet?: boolean; crossJudge?: boolean } = {},
 ) {
   const start = Date.now();
+  logEvent({ event: "run_started", book, case_id: caseId, cross_judge: opts.crossJudge ?? false });
   const { framework, prompt, rubric } = loadBook(book);
   const caseData = loadCase(book, caseId);
 
@@ -436,6 +473,14 @@ async function cmdRun(
   const report = buildReport(book, caseId, rubric, analysis, itemScores, durationMs);
   if (crossJudge) report.cross_judge = crossJudge;
   const path = persistReport(report);
+  logEvent({
+    event: "run_completed",
+    book,
+    case_id: caseId,
+    outcome: report.passed ? "pass" : "fail",
+    duration_ms: durationMs,
+    cross_judge: opts.crossJudge ?? false,
+  });
 
   if (!opts.quiet) {
     printReport(report);
@@ -466,12 +511,15 @@ async function cmdRun(
 }
 
 async function cmdSynthesize(caseId: string, opts: { crossJudge?: boolean } = {}) {
+  const synthStart = Date.now();
+  logEvent({ event: "synthesize_started", case_id: caseId, cross_judge: opts.crossJudge ?? false });
   const books = listBooks();
   const booksWithCase = books.filter((b) =>
     existsSync(join(BOOKS_DIR, b, "cases", `${caseId}.json`)),
   );
 
   if (booksWithCase.length === 0) {
+    logEvent({ event: "synthesize_failed", case_id: caseId, error: "no_books_with_case" });
     throw new Error(
       `No books contain case '${caseId}'. Add the case to a book's cases/ directory first.`,
     );
@@ -491,6 +539,15 @@ async function cmdSynthesize(caseId: string, opts: { crossJudge?: boolean } = {}
     console.error(`  → ${verdict} ${pct}%`);
     reports.push(report);
   }
+
+  const allPassed = reports.every((r) => r.passed);
+  logEvent({
+    event: "synthesize_completed",
+    case_id: caseId,
+    outcome: allPassed ? "pass" : "fail",
+    duration_ms: Date.now() - synthStart,
+    cross_judge: opts.crossJudge ?? false,
+  });
 
   console.log("");
   console.log("═".repeat(72));
@@ -524,6 +581,88 @@ function cmdListBooks() {
   }
 }
 
+function cmdStats() {
+  if (!existsSync(EVENTS_FILE)) {
+    console.log("No telemetry events recorded yet.");
+    console.log(`Events will be written to ${EVENTS_FILE} when you run gtmstack commands.`);
+    console.log("Run 'gtmstack telemetry' for opt-out instructions.");
+    return;
+  }
+  const lines = readFileSync(EVENTS_FILE, "utf-8")
+    .trim()
+    .split("\n")
+    .filter((l) => l.length > 0);
+  const events: TelemetryEvent[] = lines.map((l) => JSON.parse(l));
+
+  const total = events.length;
+  const runStarted = events.filter((e) => e.event === "run_started").length;
+  const runCompleted = events.filter((e) => e.event === "run_completed").length;
+  const runPassed = events.filter(
+    (e) => e.event === "run_completed" && e.outcome === "pass",
+  ).length;
+  const synthStarted = events.filter((e) => e.event === "synthesize_started").length;
+  const synthCompleted = events.filter((e) => e.event === "synthesize_completed").length;
+
+  const runsByBook = events
+    .filter((e) => e.event === "run_completed")
+    .reduce<Record<string, number>>((acc, e) => {
+      const k = e.book ?? "unknown";
+      acc[k] = (acc[k] ?? 0) + 1;
+      return acc;
+    }, {});
+
+  const completionRate = runStarted > 0 ? ((runCompleted / runStarted) * 100).toFixed(1) : "n/a";
+  const passRate = runCompleted > 0 ? ((runPassed / runCompleted) * 100).toFixed(1) : "n/a";
+  const synthCompletionRate =
+    synthStarted > 0 ? ((synthCompleted / synthStarted) * 100).toFixed(1) : "n/a";
+
+  console.log("gtmstack stats (from local events log)");
+  console.log("─".repeat(50));
+  console.log(`Total events recorded:        ${total}`);
+  console.log("");
+  console.log(`Book runs started:            ${runStarted}`);
+  console.log(`Book runs completed:          ${runCompleted}  (${completionRate}%)`);
+  console.log(`Book runs passing rubric:     ${runPassed}  (${passRate}% of completed)`);
+  console.log("");
+  console.log(`Synthesize commands started:  ${synthStarted}`);
+  console.log(`Synthesize commands completed:${synthCompleted}  (${synthCompletionRate}%)`);
+  console.log("");
+  if (Object.keys(runsByBook).length > 0) {
+    console.log("Runs by book:");
+    for (const [book, count] of Object.entries(runsByBook).sort((a, b) => b[1] - a[1])) {
+      console.log(`  ${book.padEnd(28)}  ${count}`);
+    }
+  }
+  console.log("");
+  console.log(`Events file: ${EVENTS_FILE}`);
+}
+
+function cmdTelemetry() {
+  console.log("gtmstack telemetry");
+  console.log("─".repeat(50));
+  console.log(`Events file:   ${EVENTS_FILE}`);
+  const enabled = process.env.GTMSTACK_TELEMETRY !== "off";
+  console.log(`Status:        ${enabled ? "enabled (default)" : "disabled (GTMSTACK_TELEMETRY=off)"}`);
+  console.log("");
+  console.log("What is logged:");
+  console.log("  - Event type, ISO 8601 timestamp, gtmstack version");
+  console.log("  - Book name and case ID for run / synthesize commands");
+  console.log("  - Pass/fail outcome and duration_ms for completed runs");
+  console.log("  - Cross-judge flag");
+  console.log("");
+  console.log("What is NOT logged:");
+  console.log("  - Case content, signal text, deliverable content, analysis text");
+  console.log("  - Anything personally identifying");
+  console.log("");
+  console.log("Where it goes: nowhere. The events file is local-only.");
+  console.log("gtmstack does not transmit telemetry to any server.");
+  console.log("");
+  console.log("To disable: export GTMSTACK_TELEMETRY=off");
+  console.log("To inspect: cat ~/.gtmstack/events.jsonl | jq");
+  console.log("To summarize: gtmstack stats");
+  console.log("To wipe: rm ~/.gtmstack/events.jsonl");
+}
+
 function cmdListCases(book: string) {
   const cases = listCases(book);
   if (cases.length === 0) {
@@ -544,6 +683,8 @@ Usage:
   gtmstack synthesize <case> [--cross-judge]    Run all books that have the case, summarize
   gtmstack list-books                           List installed books
   gtmstack list-cases <book>                    List cases for a book
+  gtmstack stats                                Summarize local events log (run counts, completion rate)
+  gtmstack telemetry                            Show telemetry status + opt-out instructions
   gtmstack version                              Print version
   gtmstack help                                 Show this help
 
@@ -598,6 +739,12 @@ async function main() {
       case "list-cases":
         if (args.length < 1) throw new Error("Usage: gtmstack list-cases <book>");
         cmdListCases(args[0]);
+        break;
+      case "stats":
+        cmdStats();
+        break;
+      case "telemetry":
+        cmdTelemetry();
         break;
       case "version":
       case "--version":

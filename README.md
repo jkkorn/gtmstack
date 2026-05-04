@@ -345,6 +345,23 @@ and has an active strategic decision to make on a tight clock. It is the
 wrong tool for a buyer who needs vendor credibility, implementation
 support, or tactical execution.
 
+## Local events log
+
+gtmstack records what you ran (and how it went) to `~/.gtmstack/events.jsonl`
+so you can see your own usage over time. Run counts, completion rates,
+durations. **The file is local-only — nothing is transmitted anywhere.**
+
+What's logged: event type, ISO timestamp, gtmstack version, book name,
+case ID, pass/fail outcome, duration. What is NOT logged: case content,
+signal text, deliverable content, anything identifying.
+
+```bash
+gtmstack stats          # summary: run counts, completion rate, runs by book
+gtmstack telemetry      # status + opt-out instructions
+```
+
+To disable: `export GTMSTACK_TELEMETRY=off`. To wipe: `rm ~/.gtmstack/events.jsonl`.
+
 ## The /gtm-office-hours skill (alternative invocation)
 
 If you've installed the skill at `~/.claude/skills/gtm-office-hours`,
