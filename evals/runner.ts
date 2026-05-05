@@ -203,12 +203,29 @@ function listCases(book: string): string[] {
 
 // ---------- Analysis phase ----------
 
+const CONTEXT_DIR = join(__dirname, "context");
+
+function loadContextModules(modules: string[] | undefined): string {
+  if (!modules || modules.length === 0) return "";
+  const parts: string[] = [];
+  for (const m of modules) {
+    const path = join(CONTEXT_DIR, `${m}.md`);
+    if (!existsSync(path)) {
+      console.error(`Warning: context module '${m}' not found at ${path}`);
+      continue;
+    }
+    parts.push(`## Cross-cutting context: ${m}\n\n${readFileSync(path, "utf-8").trim()}`);
+  }
+  if (parts.length === 0) return "";
+  return `\n\n# Cross-cutting context modules\n\nReference material relevant to this case. Apply it as background fluency about the operating environment; do not treat it as part of the case inputs.\n\n${parts.join("\n\n---\n\n")}\n`;
+}
+
 function buildAnalysisPrompt(
   framework: string,
   promptTemplate: string,
   caseData: any,
 ): string {
-  // Strip ground_truth and notes_for_eval from case before sending to analyst.
+  // Strip ground_truth, notes_for_eval, and context_modules (metadata) from case before sending to analyst.
   const caseInput = {
     id: caseData.id,
     company: caseData.company,
@@ -216,6 +233,8 @@ function buildAnalysisPrompt(
     expansion_thesis: caseData.expansion_thesis,
     signals: caseData.signals,
   };
+
+  const contextModules = loadContextModules(caseData.context_modules);
 
   return `You are a strategic GTM advisor. Apply the framework below to the GTM situation and produce a structured analysis.
 
@@ -236,7 +255,7 @@ ${promptTemplate}
 
 \`\`\`json
 ${JSON.stringify(caseInput, null, 2)}
-\`\`\`
+\`\`\`${contextModules}
 
 Produce the markdown analysis now. Section headers exactly as specified by the prompt template. No commentary outside the analysis.`;
 }
@@ -581,6 +600,102 @@ function cmdListBooks() {
   }
 }
 
+function cmdNewCase(initialId: string | undefined) {
+  const id = (initialId || prompt("Case ID (slug, e.g., comp-2026):") || "").trim();
+  if (!/^[a-z0-9][a-z0-9-]*$/.test(id)) {
+    throw new Error(
+      "Invalid case ID. Use lowercase letters, digits, hyphens (e.g., comp-2026).",
+    );
+  }
+
+  const books = listBooks();
+  if (books.length === 0) throw new Error("No books installed.");
+  const collisions = books.filter((b) => existsSync(join(BOOKS_DIR, b, "cases", `${id}.json`)));
+  if (collisions.length > 0) {
+    throw new Error(
+      `Case '${id}' already exists in: ${collisions.join(", ")}. Choose a different ID or delete the existing files first.`,
+    );
+  }
+
+  const companyName = (prompt("Company name:") || "").trim() || "TODO: company name";
+  const companyDesc =
+    (prompt("One-line company description:") || "").trim() || "TODO: one-line description";
+
+  const caseTypeOptions = ["blind_historical", "blind", "blind_simulation", "self_diagnostic"];
+  console.log("\nCase types:");
+  for (let i = 0; i < caseTypeOptions.length; i++) {
+    console.log(`  ${i + 1}. ${caseTypeOptions[i]}`);
+  }
+  const caseTypeRaw = (prompt("\nCase type (1-4) [1]:") || "1").trim();
+  const caseTypeIdx = Math.max(1, Math.min(4, parseInt(caseTypeRaw) || 1)) - 1;
+  const caseType = caseTypeOptions[caseTypeIdx];
+
+  const useBraContext = (prompt("Add brazilian-gtm context module? (y/n) [n]:") || "n")
+    .trim()
+    .toLowerCase()
+    .startsWith("y");
+
+  const template: any = {
+    id,
+    case_type: caseType,
+    case_type_note: "TODO: explain framing of this case (why now, what each book should focus on)",
+    company: { name: companyName, description: companyDesc },
+    current_state: {
+      revenue_arr_usd: "TODO: revenue or 'Not publicly disclosed'",
+      customers_count_approx: "TODO: customer count + concentration",
+      customer_profile: "TODO: detailed customer profile",
+      sales_motion: "TODO: PLG / outbound / hybrid / etc.",
+      industries: ["TODO: industry"],
+      geography_primary: "TODO: geographic concentration",
+    },
+    expansion_thesis: "TODO: what the company is trying to do next",
+    signals: [
+      "TODO: signal 1 — replace with qualitative observation about the company",
+      "TODO: signal 2",
+      "TODO: signal 3",
+      "TODO: signal 4",
+      "TODO: signal 5",
+    ],
+    notes_for_eval: "TODO: framing notes (what should each book chew on, what's the convergence target)",
+  };
+  if (useBraContext) template.context_modules = ["brazilian-gtm"];
+
+  const path = join(BOOKS_DIR, "crossing-the-chasm", "cases", `${id}.json`);
+  writeFileSync(path, JSON.stringify(template, null, 2) + "\n");
+
+  console.log(`\n✓ Scaffolded ${path}`);
+  console.log("\nNext steps:");
+  console.log(`  1. Edit the file and fill in the TODOs (signals, current_state, etc.)`);
+  console.log(`  2. Run 'gtmstack sync-cases ${id}' to mirror to all other books`);
+  console.log(`  3. Run 'gtmstack synthesize ${id}' to produce the multi-book diagnosis`);
+}
+
+function cmdSyncCases(caseId: string) {
+  const sourcePath = join(BOOKS_DIR, "crossing-the-chasm", "cases", `${caseId}.json`);
+  if (!existsSync(sourcePath)) {
+    throw new Error(
+      `Source case not found: ${sourcePath}. Author the case in chasm first via 'gtmstack new-case ${caseId}'.`,
+    );
+  }
+  const sourceContent = readFileSync(sourcePath, "utf-8");
+  const targetBooks = listBooks().filter((b) => b !== "crossing-the-chasm");
+  const copied: string[] = [];
+  const skipped: string[] = [];
+  for (const book of targetBooks) {
+    const destPath = join(BOOKS_DIR, book, "cases", `${caseId}.json`);
+    if (existsSync(destPath) && readFileSync(destPath, "utf-8") === sourceContent) {
+      skipped.push(book);
+      continue;
+    }
+    writeFileSync(destPath, sourceContent);
+    copied.push(book);
+  }
+  console.log(`Synced '${caseId}' from crossing-the-chasm:`);
+  if (copied.length > 0) console.log(`  copied:   ${copied.join(", ")}`);
+  if (skipped.length > 0) console.log(`  skipped:  ${skipped.join(", ")} (already identical)`);
+  if (copied.length === 0 && skipped.length === 0) console.log("  no other books with cases/ directory");
+}
+
 function cmdStats() {
   if (!existsSync(EVENTS_FILE)) {
     console.log("No telemetry events recorded yet.");
@@ -683,6 +798,8 @@ Usage:
   gtmstack synthesize <case> [--cross-judge]    Run all books that have the case, summarize
   gtmstack list-books                           List installed books
   gtmstack list-cases <book>                    List cases for a book
+  gtmstack new-case [<id>]                      Scaffold a new case file with TODOs (interactive)
+  gtmstack sync-cases <case>                    Copy a case from chasm to all other books
   gtmstack stats                                Summarize local events log (run counts, completion rate)
   gtmstack telemetry                            Show telemetry status + opt-out instructions
   gtmstack version                              Print version
@@ -739,6 +856,13 @@ async function main() {
       case "list-cases":
         if (args.length < 1) throw new Error("Usage: gtmstack list-cases <book>");
         cmdListCases(args[0]);
+        break;
+      case "new-case":
+        cmdNewCase(args[0]);
+        break;
+      case "sync-cases":
+        if (args.length < 1) throw new Error("Usage: gtmstack sync-cases <case>");
+        cmdSyncCases(args[0]);
         break;
       case "stats":
         cmdStats();

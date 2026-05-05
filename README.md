@@ -402,6 +402,60 @@ The current case library:
 | anthropic-brazil-2026 | all five | blind simulation |
 | gtmstack-2026 | all five | self-diagnostic |
 
+### Adding a new case
+
+```bash
+gtmstack new-case <id>           # interactive: scaffolds template with TODOs
+# (edit the resulting evals/books/crossing-the-chasm/cases/<id>.json)
+gtmstack sync-cases <id>         # mirror chasm copy to all other books
+gtmstack synthesize <id>         # run all books, produce per-book reports
+```
+
+The scaffold writes a single template file under
+`evals/books/crossing-the-chasm/cases/<id>.json` with TODO placeholders for
+each field. Edit it in your favorite editor, then run `sync-cases` to mirror
+the finished case to all other books that have a `cases/` directory.
+
+For the convention behind case ID naming (slug-style, year-suffixed) and the
+field schema, copy any existing case file as a template — `notion-2020.json`
+is a clean multi-book historical example.
+
+## Cross-cutting context modules
+
+Some cases benefit from operating-environment background that's
+cross-cutting across books — e.g., a Brazilian-market case where every book
+needs to know about LGPD, the Brazilian fintech ecosystem, AWS São Paulo
+dynamics. Context modules deliver that background as reference material
+injected into each analyst prompt.
+
+Declare a context module on a case file by adding a `context_modules` field:
+
+```json
+{
+  "id": "comp-2026",
+  "case_type": "blind",
+  "company": { ... },
+  "current_state": { ... },
+  "expansion_thesis": "...",
+  "signals": [ ... ],
+  "context_modules": ["brazilian-gtm"]
+}
+```
+
+The runner loads `evals/context/<module>.md` and injects it into every
+book's analyst prompt as background fluency about the operating
+environment. Currently shipping:
+
+- **brazilian-gtm** — Brazilian regulatory landscape (LGPD, ANPD, Open
+  Finance, Pix), fintech ecosystem ("five sisters" + digital fintechs),
+  enterprise B2B SaaS landscape, local SI competitors, public-sector
+  procurement rules, VC ecosystem, cultural / B2B norms,
+  pricing/contracting friction, common Brazilian-market failure modes.
+
+The pattern is extensible — to add an `indian-fintech` or `eu-regulated-saas`
+or `latam-general` module, drop a Markdown file at `evals/context/<name>.md`
+and reference it from case files.
+
 ## Why books-as-evals
 
 Most prescriptive frameworks have testable claims. *Crossing the Chasm*
@@ -425,6 +479,7 @@ gtmstack/
 │   ├── runner.ts            # TypeScript runner (calls claude -p)
 │   ├── package.json         # Bun config
 │   ├── books/               # Encoded frameworks
+│   ├── context/             # Cross-cutting context modules (brazilian-gtm.md, ...)
 │   ├── runs/                # Per-run reports (auto-generated)
 │   └── deliverables/        # Multi-book synthesis documents
 ├── gtm-office-hours/
