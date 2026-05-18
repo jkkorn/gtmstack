@@ -138,7 +138,7 @@ from Mom Test's customer-discovery angle.*
 ## How to nominate
 
 Open an issue using the **"Nominate a book"** template:
-[New nomination →](https://github.com/jonathan-korn/gtmstack/issues/new?template=book-nomination.yml)
+[New nomination →](https://github.com/jkkorn/gtmstack/issues/new?template=book-nomination.yml)
 
 Or DM me. I tally regularly and add the winner as the next encoded book.
 

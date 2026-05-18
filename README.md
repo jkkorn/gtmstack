@@ -397,7 +397,7 @@ The next book to get encoded gets picked by readers, not by me.
   The Challenger Sale, Positioning, Traction, Zero to One, Blue Ocean,
   Innovator's Dilemma, Four Steps to the Epiphany, and more.
 - Nominate via issue:
-  [New nomination →](https://github.com/jonathan-korn/gtmstack/issues/new?template=book-nomination.yml)
+  [New nomination →](https://github.com/jkkorn/gtmstack/issues/new?template=book-nomination.yml)
 - Upvote others' nominations with 👍 reactions on the issue.
 
 I tally vote count, comment depth, and which axis is currently
