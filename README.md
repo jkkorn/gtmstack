@@ -388,6 +388,23 @@ above, finds the gtmstack CLI on your PATH, and writes outputs to
   falsifying questions, commitment ladder, bad-mouth test. *Whether
   you've actually validated demand or just the founder's hopes.*
 
+### Nominate the next book
+
+The next book to get encoded gets picked by readers, not by me.
+
+- See the seed list with rationale:
+  [evals/CANDIDATE_BOOKS.md](evals/CANDIDATE_BOOKS.md) — SPIN Selling,
+  The Challenger Sale, Positioning, Traction, Zero to One, Blue Ocean,
+  Innovator's Dilemma, Four Steps to the Epiphany, and more.
+- Nominate via issue:
+  [New nomination →](https://github.com/jonathan-korn/gtmstack/issues/new?template=book-nomination.yml)
+- Upvote others' nominations with 👍 reactions on the issue.
+
+I tally vote count, comment depth, and which axis is currently
+underweight in the eval set. Walk me through *why* a book would change
+your work — that beats a one-line "+1." See the "How a book gets
+picked" section in CANDIDATE_BOOKS.md for the full picking criteria.
+
 ## Cases
 
 The current case library:

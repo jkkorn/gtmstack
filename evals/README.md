@@ -41,6 +41,9 @@ written by hand or via the `/gtm-office-hours` skill) live in
 - **obviously-awesome** (April Dunford) — competitive alternatives, unique attributes, value themes, market category, positioning statement
 - **predictable-revenue** (Aaron Ross) — ICP, role specialization (SDR/AE/AM), Seeds/Nets/Spears, Cold Calling 2.0, when NOT to apply outbound
 
+The next book gets picked by readers — see [CANDIDATE_BOOKS.md](CANDIDATE_BOOKS.md)
+for the seed list and how to nominate.
+
 ## Adding a book
 
 Create `books/<book-id>/` with:
